@@ -1,56 +1,66 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const app = express();
+const requestIp = require('request-ip');
+const axios = require('axios');
 const path = require('path');
-const os = require('os');
-const geoip = require('geoip-lite');
+const app = express();
 
-// MongoDB Connection
-mongoose.connect('mongodb+srv://yzlbabapro:UhgisL0WxPhzseYE@userdatabase.b1hmh.mongodb.net/', {
+// MongoDB bağlantısı
+mongoose.connect("mongodb+srv://yzlbabapro:UhgisL0WxPhzseYE@userdatabase.b1hmh.mongodb.net/", {
     useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => console.log('MongoDB Connected')).catch(err => console.log(err));
+    useUnifiedTopology: true,
+}).then(() => {
+    console.log("MongoDB bağlantısı başarılı.");
+}).catch((err) => {
+    console.log("MongoDB bağlantısı başarısız:", err);
+});
 
-// Define Schema
-const visitorSchema = new mongoose.Schema({
+// MongoDB modelini tanımlayalım
+const Visitor = mongoose.model('Visitor', new mongoose.Schema({
     ip: String,
     country: String,
-    date: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now }
+}));
+
+// Statistiği Admin Panelinde Görüntülemek İçin
+const getCountryStats = async () => {
+    try {
+        const visitors = await Visitor.aggregate([
+            { $group: { _id: "$country", count: { $sum: 1 } } }
+        ]);
+        return visitors;
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+};
+
+// IP adresini al ve ülke bilgisi ile kaydet
+app.use("/", async (req, res) => {
+    const clientIp = requestIp.getClientIp(req);
+    try {
+        // ipinfo.io API'si ile ülke bilgisini al
+        const response = await axios.get(`https://ipinfo.io/${clientIp}/json?token=YOUR_API_KEY`);
+        const country = response.data.country;
+
+        // MongoDB'ye kaydet
+        const visitor = new Visitor({ ip: clientIp, country: country });
+        await visitor.save();
+
+        res.send("Selam!");
+    } catch (error) {
+        console.log("IP bilgisi alınamadı: ", error);
+        res.send("Selam!");
+    }
 });
 
-const Visitor = mongoose.model('Visitor', visitorSchema);
-
-// Middleware to log IP
-app.use((req, res, next) => {
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const geo = geoip.lookup(ip);
-    const country = geo ? geo.country : 'Unknown';
-
-    const visitor = new Visitor({ ip, country });
-    visitor.save().then(() => console.log(`Visitor logged: ${ip} from ${country}`));
-    
-    next();
-});
-
-// Main Route
-app.use('/', (req, res) => {
-    res.send('selam');
-});
-
-// Admin Page
+// Admin sayfasını sunmak için
 app.get('/admin', async (req, res) => {
-    const visitors = await Visitor.find();
-    const countryStats = {};
-
-    visitors.forEach(visitor => {
-        countryStats[visitor.country] = (countryStats[visitor.country] || 0) + 1;
-    });
-
+    const stats = await getCountryStats();
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// Serve Static Files
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Listen
-app.listen(5000, () => console.log('Sunucu Calisiyor Port 5000'));
+// Sunucuyu başlat
+app.listen(5000, () => {
+    console.log("Sunucu Çalışıyor Port 5000");
+});

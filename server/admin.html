@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,54 +7,41 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #121212;
-            color: #fff;
-            font-family: 'Arial', sans-serif;
-        }
-        .container {
-            width: 80%;
-            max-width: 1000px;
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: #111;
+            color: white;
+            font-family: Arial, sans-serif;
         }
         canvas {
-            margin-top: 20px;
+            max-width: 600px;
+            margin: 50px auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Ziyaretçi İstatistikleri</h1>
-        <canvas id="visitorChart"></canvas>
-    </div>
-
+    <h1>Admin Paneli</h1>
+    <canvas id="countryChart"></canvas>
     <script>
-        // Dummy data, this should be replaced dynamically with server data
-        const countryData = {
-            'TR': 10,
-            'US': 5,
-            'UK': 3,
-            'DE': 7,
-            'FR': 4
-        };
-        
-        const ctx = document.getElementById('visitorChart').getContext('2d');
-        const visitorChart = new Chart(ctx, {
+        const countryStats = [];  // Bu diziyi veritabanından alacağız
+        // Örnek veriler
+        const stats = [
+            { country: 'TR', count: 150 },
+            { country: 'US', count: 100 },
+            { country: 'DE', count: 50 }
+        ];
+
+        // Türkiye'nin sayısını arttırmak
+        const turkeyCount = stats.find(item => item.country === 'TR')?.count || 0;
+
+        const ctx = document.getElementById('countryChart').getContext('2d');
+        const countryChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: Object.keys(countryData),
+                labels: ['Türkiye', 'Amerika', 'Almanya'],  // Bu etiketler veritabanından dinamik olarak çekilebilir
                 datasets: [{
                     label: 'Ziyaretçi Sayısı',
-                    data: Object.values(countryData),
-                    backgroundColor: '#3b82f6',
-                    borderColor: '#2563eb',
+                    data: [turkeyCount, 100, 50],  // Türkiye'nin sayısı ile güncellenir
+                    backgroundColor: ['#FF0000', '#0000FF', '#00FF00'],
+                    borderColor: ['#FF0000', '#0000FF', '#00FF00'],
                     borderWidth: 1
                 }]
             },
@@ -62,7 +49,14 @@
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.raw + " ziyaretçi";
+                            }
+                        }
                     }
                 },
                 scales: {

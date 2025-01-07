@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Paneli</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            width: 80%;
+            max-width: 1000px;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ziyaretçi İstatistikleri</h1>
+        <canvas id="visitorChart"></canvas>
+    </div>
+
+    <script>
+        // Dummy data, this should be replaced dynamically with server data
+        const countryData = {
+            'TR': 10,
+            'US': 5,
+            'UK': 3,
+            'DE': 7,
+            'FR': 4
+        };
+        
+        const ctx = document.getElementById('visitorChart').getContext('2d');
+        const visitorChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(countryData),
+                datasets: [{
+                    label: 'Ziyaretçi Sayısı',
+                    data: Object.values(countryData),
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#2563eb',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
